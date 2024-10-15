@@ -2,22 +2,18 @@ package com.example.SecurityApp.controller;
 
 import com.example.SecurityApp.dto.AuthRequest;
 import com.example.SecurityApp.dto.AuthResponse;
-import com.example.SecurityApp.dto.LoginRequest;
 import com.example.SecurityApp.dto.UserRegistrationDTO;
 import com.example.SecurityApp.service.AuthService;
 import com.example.SecurityApp.service.UserService;
-import com.example.SecurityApp.util.JwtUtil;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -25,12 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     @Autowired
     private AuthService authService;
-
-    @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
 
     private final UserService userService;
 
@@ -40,16 +30,11 @@ public class AuthController {
         return ResponseEntity.ok("User registered successfully");
     }
 
-    @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody AuthRequest authRequest) {
-        try {
-            authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-            );
-            String token = jwtUtil.generateToken(authRequest.getUsername());
-            return ResponseEntity.ok(new AuthResponse(token));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
-        }
+    @PostMapping(value = "/login", produces = "application/json")  // Ensure that the response is JSON
+    public ResponseEntity<AuthResponse> login(@RequestBody AuthRequest authRequest) {
+        String token = authService.login(authRequest.getUsername(), authRequest.getPassword());
+        return ResponseEntity.ok(new AuthResponse(token));
     }
+
+
 }
